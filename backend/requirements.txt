@@ -9,6 +9,7 @@ chromadb
 langgraph
 langchain
 langchain-openai
+langchain-text-splitters
 langchain-groq
 PyMuPDF
 python-docx
