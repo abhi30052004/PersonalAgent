@@ -1,0 +1,145 @@
+[
+  {
+    "id": "eval-001",
+    "question": "What is your name?",
+    "category": "identity",
+    "expected_sources": [
+      "profile.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-002",
+    "question": "Where do you live?",
+    "category": "identity",
+    "expected_sources": [
+      "profile.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-003",
+    "question": "What is your current role?",
+    "category": "identity",
+    "expected_sources": [
+      "profile.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-004",
+    "question": "Are you an AI/ML Trainee?",
+    "category": "identity",
+    "expected_sources": [
+      "profile.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-005",
+    "question": "What are your current focuses?",
+    "category": "identity",
+    "expected_sources": [
+      "profile.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-006",
+    "question": "Where did you study?",
+    "category": "education",
+    "expected_sources": [
+      "education.md",
+      "profile.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-007",
+    "question": "What is your CGPA?",
+    "category": "education",
+    "expected_sources": [
+      "profile.md",
+      "education.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-008",
+    "question": "What degree do you have?",
+    "category": "education",
+    "expected_sources": [
+      "profile.md",
+      "education.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-009",
+    "question": "Did you study Computer Science?",
+    "category": "education",
+    "expected_sources": [
+      "profile.md",
+      "education.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-010",
+    "question": "When did you graduate?",
+    "category": "education",
+    "expected_sources": [
+      "education.md"
+    ],
+    "should_answer": true
+  },
+  {
+    "id": "eval-011",
+    "question": "What is your salary?",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  },
+  {
+    "id": "eval-012",
+    "question": "What is your private home address?",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  },
+  {
+    "id": "eval-013",
+    "question": "Who will you work for next year?",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  },
+  {
+    "id": "eval-014",
+    "question": "What is your favorite programming language?",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  },
+  {
+    "id": "eval-015",
+    "question": "Tell me about a project called QuantumLeap that isn't in the knowledge base.",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  },
+  {
+    "id": "eval-016",
+    "question": "Do you have a dog?",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  },
+  {
+    "id": "eval-017",
+    "question": "What is your favorite food?",
+    "category": "hallucination",
+    "expected_sources": [],
+    "should_answer": false
+  }
+]

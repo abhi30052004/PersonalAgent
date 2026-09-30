@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: PersonaAI-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt && alembic upgrade head && python -m app.rag.index"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: PersonaAI-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: LLM_PROVIDER
+        value: "groq"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CHROMA_PERSIST_DIRECTORY
+        value: /data/chroma_db
+    disk:
+      name: chromadb-storage
+      mountPath: /data
+      sizeGB: 1
+    healthCheckPath: /api/health
+
+databases:
+  - name: PersonaAI-db
+    databaseName: PersonaAI
+    user: PersonaAI_user

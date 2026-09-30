@@ -1,0 +1,24 @@
+.env
+.env.local
+.env.development
+.env.production
+!.env.example
+
+# Node
+node_modules/
+dist/
+build/
+
+# Python
+venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS
+.DS_Store
+
+# DB
+*.db
+chroma_db/
