@@ -22,13 +22,13 @@ export const VoiceSettingsPanel: React.FC<VoiceSettingsPanelProps> = ({
   const tones = ['Natural', 'Professional', 'Friendly', 'Calm', 'Confident', 'Energetic'];
 
   return (
-    <div className="absolute bottom-full left-0 mb-4 w-72 md:w-80 bg-[var(--bg-tertiary)] border border-[var(--card-border)] rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-4">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/5">
-        <div className="flex items-center gap-2 text-[var(--text-primary)] font-medium">
-          <Settings2 size={16} className="text-purple-400" />
-          <span>Voice Settings</span>
+    <div className="absolute bottom-[calc(100%+20px)] left-1/2 -translate-x-1/2 w-[340px] bg-[#1a1b26] border border-[#2e3148] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+        <div className="flex items-center gap-2 text-white font-semibold">
+          <Settings2 size={16} className="text-cyan-400" />
+          <span className="text-sm tracking-wide">Voice Settings</span>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-lg transition-colors text-[var(--text-secondary)]">
+        <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-[var(--text-secondary)] hover:text-white">
           <X size={16} />
         </button>
       </div>

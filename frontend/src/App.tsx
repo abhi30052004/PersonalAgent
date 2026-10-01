@@ -8,7 +8,7 @@ import {
   Send, Loader2, Menu, X, Plus,
   LogOut, Copy, ThumbsUp, ThumbsDown, Check,
   Bot, User as UserIcon, Settings, AlertCircle,
-  Mic, Volume2, Square, VolumeX
+  Mic, MicOff, Volume2, Square, VolumeX
 } from 'lucide-react';
 import { useVoice } from './hooks/useVoice';
 import { VoiceSettingsPanel } from './components/VoiceSettingsPanel';
@@ -220,7 +220,15 @@ function App() {
 
   const handleSubmit = async (e?: React.FormEvent, customInput?: string, isVoiceInput: boolean = false) => {
     if (e) e.preventDefault();
-    const text = customInput || input;
+    
+    let text = customInput || input;
+    
+    if (voice.isListening && voice.transcript && !customInput) {
+      text = voice.transcript;
+      voice.stopListening();
+      voice.setTranscript('');
+    }
+
     if (!text.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -393,7 +401,10 @@ function App() {
     );
   }
 
+
+
   return (
+    <>
     <div className="flex h-screen overflow-hidden relative bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* Global Background Orbs */}
       <div className="orb orb-1"></div>
@@ -514,81 +525,176 @@ function App() {
         </div>
       </motion.div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative w-full h-full min-w-0 z-10">
+      {/* Main Content Area */}
+      <div className="flex-1 flex h-full relative z-10 overflow-hidden">
+        
+        {/* Left Section: Main Console (Hidden on mobile) */}
+        <div className="hidden lg:flex flex-col flex-1 items-center justify-center bg-[rgba(10,15,25,0.8)] relative overflow-hidden">
+          
+          <div className="flex flex-col items-center justify-center max-w-md w-full text-center mb-10 z-10">
+            {/* Minimal Visualizer */}
+            <motion.div 
+              animate={voice.isSpeaking ? { scale: [1, 1.1, 1] } : isLoading ? { rotate: 360 } : {}}
+              transition={{ repeat: Infinity, duration: isLoading ? 3 : 2, ease: "linear" }}
+              className="w-32 h-32 rounded-full bg-[rgba(255,255,255,0.03)] flex items-center justify-center mb-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+              style={{
+                boxShadow: voice.isListening 
+                  ? '0 0 50px rgba(159, 122, 234, 0.4)' 
+                  : voice.isSpeaking 
+                  ? '0 0 50px rgba(74, 222, 128, 0.4)' 
+                  : isLoading
+                  ? '0 0 50px rgba(34, 211, 238, 0.4)'
+                  : '0 0 50px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <div className="flex items-center gap-1.5 h-8">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <motion.div 
+                    key={i}
+                    animate={
+                      voice.isSpeaking || voice.isListening 
+                        ? { height: ["20%", "100%", "20%"] } 
+                        : isLoading
+                        ? { height: ["20%", "60%", "20%"], opacity: [0.3, 1, 0.3] }
+                        : { height: "20%" }
+                    }
+                    transition={{ 
+                      repeat: Infinity, 
+                      duration: isLoading ? 1.5 : Math.random() * 0.5 + 0.5,
+                      delay: isLoading ? i * 0.2 : 0
+                    }}
+                    className={`w-1.5 rounded-full ${
+                      voice.isListening 
+                        ? 'bg-[#9f7aea]' 
+                        : voice.isSpeaking 
+                        ? 'bg-[#4ade80]' 
+                        : isLoading
+                        ? 'bg-[#22d3ee]'
+                        : 'bg-[rgba(255,255,255,0.2)]'
+                    }`}
+                    style={{ height: "20%" }}
+                  />
+                ))}
+              </div>
+            </motion.div>
 
-        {/* Mobile Header */}
-        <header className="lg:hidden h-16 flex items-center px-4 sticky top-0 z-10 glass justify-between border-b-0 border-r-0 border-l-0 rounded-none">
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-[var(--text-secondary)] hover:text-white transition-colors">
-            <Menu size={22} />
-          </button>
-          <div className="font-heading font-bold text-gradient-accent text-lg">PersonaAI</div>
-          <button onClick={startNewChat} className="p-2 -mr-2 text-[var(--text-secondary)] hover:text-white transition-colors">
-            <Plus size={22} />
-          </button>
+            {/* State Text */}
+            <h1 className="text-5xl lg:text-6xl font-black mb-4 tracking-tighter transition-colors duration-300" style={{ 
+              color: voice.isListening ? '#9f7aea' : isLoading ? '#22d3ee' : voice.isSpeaking ? '#4ade80' : '#ffb4a2' 
+            }}>
+              {voice.isListening ? "LISTENING" : isLoading ? "THINKING" : voice.isSpeaking ? "SPEAKING" : "MUTED"}
+            </h1>
+            <p className="text-[var(--text-secondary)] font-medium mb-8 text-center max-w-[280px]">
+              {voice.isListening 
+                ? "Listening to your voice..." 
+                : isLoading
+                ? "AI is processing your request..."
+                : voice.isSpeaking 
+                ? "AI is responding..." 
+                : "Microphone is currently disabled. Tap to resume."}
+            </p>
+
+            <button onClick={voice.isListening ? voice.stopListening : voice.startListening} className="flex items-center justify-center gap-2 px-6 py-2 rounded-full border border-[rgba(255,255,255,0.1)] text-[10px] font-bold tracking-widest text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.05)] transition-colors mb-16 uppercase">
+              {voice.isListening ? <Square size={12} /> : <MicOff size={12} />} 
+              {voice.isListening ? "TAP TO DISCONNECT" : "TAP TO CONNECT"}
+            </button>
+
+            <div className="flex items-center gap-6 justify-center">
+              {/* Voice On/Off */}
+              <div className="flex flex-col items-center gap-4">
+                <button 
+                  onClick={() => voice.updateSettings({ ...voice.settings, autoPlay: !voice.settings.autoPlay })}
+                  className={`w-[72px] h-[72px] rounded-3xl border flex items-center justify-center transition-colors ${voice.settings.autoPlay ? 'bg-[rgba(255,255,255,0.03)] border-[rgba(34,211,238,0.3)] hover:bg-[rgba(255,255,255,0.08)]' : 'bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.05)]'}`}
+                >
+                  {voice.settings.autoPlay ? <Volume2 size={24} className="text-cyan-400" /> : <VolumeX size={24} className="text-[var(--text-secondary)]" />}
+                </button>
+                <span className={`text-[10px] font-bold tracking-widest uppercase ${voice.settings.autoPlay ? 'text-cyan-400' : 'text-[var(--text-secondary)]'}`}>
+                  {voice.settings.autoPlay ? 'Voice On' : 'Voice Off'}
+                </span>
+                
+              </div>
+
+              {/* Tap to Unmute / Mute */}
+              <div className="flex flex-col items-center gap-4">
+                <button 
+                  onClick={voice.isListening ? voice.stopListening : voice.startListening}
+                  className={`w-[72px] h-[72px] rounded-3xl flex items-center justify-center transition-all ${voice.isListening ? 'bg-[rgba(255,255,255,0.03)] border border-red-500/50 text-red-400' : 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]'}`}
+                >
+                  {voice.isListening ? <Square size={24} /> : <MicOff size={24} />}
+                </button>
+                <span className="text-[10px] font-bold tracking-widest text-cyan-400 uppercase">
+                  {voice.isListening ? "TAP TO MUTE" : "TAP TO UNMUTE"}
+                </span>
+              </div>
+
+              {/* Settings Button */}
+              <div className="flex flex-col items-center gap-4 relative">
+                <button 
+                  onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+                  className={`w-[72px] h-[72px] rounded-3xl border flex items-center justify-center transition-all ${showVoiceSettings ? 'bg-[rgba(255,255,255,0.05)] border-[rgba(34,211,238,0.5)] shadow-[0_0_20px_rgba(34,211,238,0.2)]' : 'bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.05)]'}`}
+                >
+                  <Settings size={24} className={showVoiceSettings ? 'text-cyan-400' : 'text-[var(--text-secondary)]'} />
+                </button>
+                <span className={`text-[10px] font-bold tracking-widest uppercase ${showVoiceSettings ? 'text-cyan-400' : 'text-[var(--text-secondary)]'}`}>
+                  Settings
+                </span>
+                
+                {/* Embedded Settings Modal */}
+                <VoiceSettingsPanel isOpen={showVoiceSettings} onClose={() => setShowVoiceSettings(false)} settings={voice.settings} updateSettings={voice.updateSettings} voices={voice.voices} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Section: Chat Interface (Minimized layout on desktop) */}
+        <div className="w-full lg:w-[320px] xl:w-[400px] flex flex-col relative h-full lg:h-[85%] lg:my-auto lg:mr-6 bg-[var(--bg-primary)] lg:border lg:border-[var(--card-border)] lg:rounded-3xl shadow-2xl z-20 shrink-0 overflow-hidden">
+
+        {/* Right Section Header */}
+        <header className="h-14 flex items-center px-4 sticky top-0 z-10 bg-[var(--bg-primary)] justify-between border-b border-[rgba(255,255,255,0.02)]">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-1 text-[var(--text-secondary)] hover:text-white transition-colors">
+              <Menu size={18} />
+            </button>
+            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-[var(--text-primary)] uppercase">
+              <Menu size={12} className="opacity-70 text-cyan-400" />
+              LIVE STREAM
+            </div>
+          </div>
+          <div className="flex gap-1 opacity-50">
+            <div className="w-1 h-1 rounded-full bg-white"></div>
+            <div className="w-1 h-1 rounded-full bg-white"></div>
+          </div>
         </header>
 
         {/* Messages / Empty State */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 pt-6 relative custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-6 relative custom-scrollbar flex flex-col">
 
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center max-w-3xl mx-auto py-10 px-4">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-center mb-12">
-                <motion.div
-                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-                  className="w-20 h-20 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[var(--glow-primary)]"
-                >
-                  <Bot size={40} className="text-white" />
-                </motion.div>
-                <h2 className="text-4xl font-heading font-bold mb-4 text-white">Meet your AI Digital Twin</h2>
-                <p className="text-[var(--text-secondary)] text-base max-w-lg mx-auto leading-relaxed">
-                  Ask questions about my experience, projects, skills, education and learning journey. I am equipped with detailed knowledge about Abhijit's professional life.
-                </p>
-              </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                {[
-                  { icon: <Bot size={18} />, text: "Tell me about your experience" },
-                  { icon: <Check size={18} />, text: "What projects have you built?" },
-                  { icon: <Check size={18} />, text: "What are your core skills?" },
-                  { icon: <Check size={18} />, text: "Tell me about your learning journey" }
-                ].map((suggestion, i) => (
-                  <motion.button
-                    key={i}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + (i * 0.1) }}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleSubmit(undefined, suggestion.text)}
-                    className="p-5 rounded-2xl glass glass-hover text-left flex items-start gap-3 transition-all duration-300 shadow-lg"
-                  >
-                    <div className="mt-0.5 text-[var(--accent-primary)]">{suggestion.icon}</div>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">{suggestion.text}</span>
-                  </motion.button>
-                ))}
-              </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-50 mt-20">
+              <Bot size={24} className="mb-4 text-[var(--text-secondary)]" />
+              <p className="text-[11px] font-semibold text-[var(--text-secondary)] mb-1">Awaiting voice input...</p>
+              <p className="text-[10px] text-[var(--text-muted)]">Or type a message below</p>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto pb-[160px] space-y-8">
+            <div className="max-w-4xl w-full mx-auto pb-[160px] space-y-8">
               {messages.map((msg) => (
                 <motion.div
                   initial={{ opacity: 0, y: 15, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
                   key={msg.id}
-                  className={`flex gap-4 md:gap-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex gap-3 items-start ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {/* AI Avatar */}
                   {msg.role === 'ai' && (
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] flex items-center justify-center shrink-0 mt-1 shadow-lg shadow-[var(--glow-primary)]">
-                      <Bot size={20} className="text-white" />
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#a855f7] flex items-center justify-center shrink-0 mt-1.5 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                      <Bot size={18} className="text-white" />
                     </div>
                   )}
 
-                  <div className={`max-w-[85%] sm:max-w-[80%] ${msg.role === 'user' ? 'bg-gradient-to-br from-[#4f46e5]/20 to-[#9333ea]/20 border border-[#a855f7]/30 shadow-lg px-5 py-4 rounded-3xl rounded-tr-sm text-white' : 'bg-[rgba(24,24,32,0.6)] backdrop-blur-md border border-[rgba(255,255,255,0.1)] shadow-lg px-6 py-5 rounded-3xl rounded-tl-sm text-gray-200'}`}>
+                  <div className={`max-w-[85%] sm:max-w-[80%] ${msg.role === 'user' ? 'bg-[#1e1333] shadow-lg px-5 py-3.5 rounded-3xl rounded-tr-sm text-white' : 'bg-[#141417] shadow-xl px-5 py-4 rounded-[28px] rounded-tl-sm text-gray-200'}`}>
                     {msg.role === 'user' ? (
-                      <div className="whitespace-pre-wrap text-[1rem] font-medium leading-relaxed">{msg.content}</div>
+                      <div className="whitespace-pre-wrap text-[0.95rem] font-medium leading-relaxed">{msg.content}</div>
                     ) : (
                       <div className="markdown-body text-gray-200 text-[0.95rem] leading-relaxed">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -599,7 +705,7 @@ function App() {
 
                     {/* Sources & Feedback for AI */}
                     {msg.role === 'ai' && (
-                      <div className="mt-4 flex flex-col gap-3">
+                      <div className="mt-3 flex flex-col gap-3">
                         {msg.sources && msg.sources.length > 0 && (
                           <div className="flex flex-col gap-1.5 border-t border-[var(--border)] pt-3">
                             <span className="text-xs font-semibold text-[var(--text-muted)]">Sources</span>
@@ -613,54 +719,55 @@ function App() {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => copyToClipboard(msg.content, msg.id)}
-                            className="p-1.5 hover:bg-[var(--card-1)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                             title="Copy"
                           >
                             {copiedId === msg.id ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
                           </button>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                if (voice.isSpeaking) {
-                                  voice.stopSpeaking();
-                                } else {
-                                  // Don't read the sources out loud
-                                  const textToSpeak = msg.content.replace(/Sources:[\s\S]*$/, '').trim();
-                                  voice.speak(textToSpeak);
-                                }
-                              }}
-                              className={`p-1.5 rounded transition-colors ${voice.isSpeaking ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-[var(--card-1)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-                              title={voice.isSpeaking ? "Stop Speaking" : "Play Message"}
-                            >
-                              {voice.isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                            </button>
-                            {voice.isSpeaking && voice.ttsProvider === 'browser' && (
-                              <span className="text-[10px] text-[var(--text-muted)] italic px-2 py-0.5 bg-[var(--card-1)] rounded-full animate-pulse">
-                                Using browser voice
-                              </span>
-                            )}
-                          </div>
+                          
+                          <button
+                            onClick={() => {
+                              if (voice.isSpeaking) {
+                                voice.stopSpeaking();
+                              } else {
+                                const textToSpeak = msg.content.replace(/Sources:[\s\S]*$/, '').trim();
+                                voice.speak(textToSpeak);
+                              }
+                            }}
+                            className={`p-1.5 rounded-lg transition-colors ${voice.isSpeaking ? 'bg-red-500/20 text-red-400' : 'bg-[#9333ea]/20 text-[#c084fc] hover:bg-[#9333ea]/30'}`}
+                            title={voice.isSpeaking ? "Stop Speaking" : "Play Message"}
+                          >
+                            {voice.isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                          </button>
+                          
+                          {voice.isSpeaking && voice.ttsProvider === 'browser' && (
+                            <span className="text-[10px] text-[var(--text-muted)] italic px-2 py-0.5 bg-[var(--card-1)] rounded-full animate-pulse">
+                              Using browser voice
+                            </span>
+                          )}
+                          
                           {msg.dbId && (
                             <>
                               <button
                                 onClick={() => submitFeedback(msg.dbId!, 'positive')}
-                                className="p-1.5 hover:bg-[var(--card-1)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                                 title="Helpful"
                               >
                                 <ThumbsUp size={14} />
                               </button>
                               <button
                                 onClick={() => submitFeedback(msg.dbId!, 'negative')}
-                                className="p-1.5 hover:bg-[var(--card-1)] rounded text-[var(--text-muted)] hover:text-red-400 transition-colors"
+                                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                                 title="Not helpful"
                               >
                                 <ThumbsDown size={14} />
                               </button>
                             </>
                           )}
+                          
                           {feedbackSent === msg.dbId?.toString() && (
                             <span className="text-xs text-[var(--text-muted)] ml-2">Feedback sent</span>
                           )}
@@ -672,9 +779,9 @@ function App() {
               ))}
 
               {isLoading && (
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full border border-[var(--border)] bg-[var(--card-2)] flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot size={16} className="text-[var(--text-secondary)]" />
+                <div className="flex gap-3 items-start justify-start">
+                  <div className="w-9 h-9 rounded-2xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center shrink-0 mt-1.5">
+                    <Bot size={18} className="text-[var(--text-secondary)]" />
                   </div>
                   <div className="py-2.5 flex items-center gap-2 text-[var(--text-muted)] text-sm">
                     Thinking
@@ -691,72 +798,28 @@ function App() {
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)] to-transparent pt-20 pointer-events-none z-20">
-          <div className="max-w-4xl mx-auto pointer-events-auto">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="relative glass rounded-3xl border border-[var(--card-border)] focus-within:border-[var(--accent-primary)] focus-within:shadow-[0_0_20px_var(--glow-primary)] transition-all duration-300 shadow-2xl"
-            >
-              <form onSubmit={handleSubmit} className="flex flex-col bg-[rgba(0,0,0,0.3)] rounded-3xl">
-                <textarea
-                  value={voice.isListening ? voice.transcript : input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                  placeholder={voice.isListening ? "Listening..." : "Ask PersonaAI anything..."}
-                  className={`flex-1 max-h-48 min-h-[60px] bg-transparent resize-none outline-none px-6 py-5 text-[1rem] custom-scrollbar ${voice.isListening ? 'text-purple-400' : 'text-[var(--text-primary)] placeholder-[var(--text-muted)]'}`}
-                  rows={1}
-                />
-                <div className="flex justify-between items-center px-4 pb-3 pt-1">
-                  <div className="text-xs text-[var(--text-muted)] px-2 font-medium flex items-center gap-3">
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-                        className="p-1.5 hover:bg-[var(--card-1)] rounded-lg transition-colors flex items-center gap-1.5 border border-transparent hover:border-[var(--border)]"
-                      >
-                        <Settings size={14} />
-                        <span>Voice: {voice.settings.tone}</span>
-                      </button>
-                      <VoiceSettingsPanel
-                        isOpen={showVoiceSettings}
-                        onClose={() => setShowVoiceSettings(false)}
-                        settings={voice.settings}
-                        updateSettings={voice.updateSettings}
-                        voices={voice.voices}
-                      />
-                    </div>
-                    <span className="hidden md:inline">AI generated responses based on verified knowledge.</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {voice.supported && (
-                      <button
-                        type="button"
-                        onClick={voice.isListening ? voice.stopListening : voice.startListening}
-                        className={`p-2.5 rounded-xl transition-all shadow-lg ${voice.isListening ? 'bg-red-500/20 text-red-500 animate-pulse border border-red-500/50' : 'bg-[var(--card-1)] text-[var(--text-secondary)] hover:text-white border border-[var(--border)]'}`}
-                      >
-                        {voice.isListening ? <Square size={18} /> : <Mic size={18} />}
-                      </button>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={(!input.trim() && !voice.transcript) || isLoading || voice.isListening}
-                      className="p-2.5 rounded-xl btn-primary text-white transition-opacity disabled:opacity-30 disabled:bg-[var(--card-1)] disabled:text-[var(--text-muted)] disabled:shadow-none disabled:cursor-not-allowed shadow-lg"
-                    >
-                      <Send size={18} />
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </motion.div>
-          </div>
+        {/* Input Area (All Screens) */}
+        <div className="p-4 bg-[var(--bg-primary)] shrink-0 border-t border-[rgba(255,255,255,0.02)] z-20">
+          <form onSubmit={handleSubmit} className="w-full">
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={voice.isListening ? voice.transcript : input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Connect to start chatting..."
+                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] rounded-2xl pl-5 pr-12 py-4 text-xs font-medium outline-none focus:border-[rgba(255,255,255,0.1)] transition-colors text-[var(--text-primary)] placeholder-[var(--text-muted)]"
+              />
+              <button 
+                type="submit" 
+                disabled={(!input.trim() && !voice.transcript) || isLoading}
+                className="absolute right-3 p-2 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] rounded-xl text-[var(--text-secondary)] hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
       </div>
 
       {/* Settings Modal */}
@@ -813,8 +876,8 @@ function App() {
           </div>
         )}
       </AnimatePresence>
-
     </div>
+    </>
   );
 }
 
