@@ -8,7 +8,7 @@ import {
   Send, Loader2, Menu, X, Plus,
   LogOut, Copy, ThumbsUp, ThumbsDown, Check,
   Bot, User as UserIcon, Settings, AlertCircle,
-  Mic, MicOff, Volume2, Square, VolumeX
+  MicOff, Volume2, Square, VolumeX
 } from 'lucide-react';
 import { useVoice } from './hooks/useVoice';
 import { VoiceSettingsPanel } from './components/VoiceSettingsPanel';
